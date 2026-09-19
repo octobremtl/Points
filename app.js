@@ -240,22 +240,41 @@
     summary.textContent = `${totalEarned} / ${totalPossible} points cette semaine (${pct}%)`;
     board.insertBefore(summary, table);
 
+    const { tier, label } = tierFor(pct, totalPossible);
     const banner = document.createElement("div");
-    const { smallThreshold, bigThreshold } = state.settings;
-    let tier = "none";
-    let tierText = "Pas encore de récompense";
-    if (totalPossible > 0 && pct >= bigThreshold) {
-      tier = "big";
-      tierText = "🏆 Grosse récompense débloquée !";
-    } else if (totalPossible > 0 && pct >= smallThreshold) {
-      tier = "small";
-      tierText = "🎁 Petite récompense débloquée !";
-    }
     banner.className = `reward-banner reward-${tier}`;
-    banner.textContent = tierText;
+    banner.textContent = tier === "none" ? label : `${label} débloquée !`;
     board.insertBefore(banner, table);
 
     return board;
+  }
+
+  // --- Stats shared between the board view and the history view ---
+  function computeWeekStats(week, childId) {
+    let totalEarned = 0;
+    let totalPossible = 0;
+    week.habits.forEach((habit) => {
+      const marks = week.marks[childId] && week.marks[childId][habit.id];
+      if (!marks) return;
+      DAY_KEYS.forEach((dayKey) => {
+        const s = marks[dayKey];
+        if (s === "done") {
+          totalEarned += habit.points;
+          totalPossible += habit.points;
+        } else if (s === "missed") {
+          totalPossible += habit.points;
+        }
+      });
+    });
+    const pct = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+    return { totalEarned, totalPossible, pct };
+  }
+
+  function tierFor(pct, totalPossible) {
+    const { smallThreshold, bigThreshold } = state.settings;
+    if (totalPossible > 0 && pct >= bigThreshold) return { tier: "big", label: "🏆 Grosse récompense", icon: "🏆" };
+    if (totalPossible > 0 && pct >= smallThreshold) return { tier: "small", label: "🎁 Petite récompense", icon: "🎁" };
+    return { tier: "none", label: "Pas encore de récompense", icon: "" };
   }
 
   // --- Week navigation ---
@@ -272,6 +291,70 @@
   weekLabelBtn.addEventListener("click", () => {
     currentMonday = getMonday(new Date());
     render();
+  });
+
+  // --- History dialog ---
+  const historyDialog = document.getElementById("history-dialog");
+
+  function renderHistory() {
+    const container = document.getElementById("history-content");
+    container.innerHTML = "";
+
+    const weekKeys = Object.keys(state.weeks)
+      .filter((k) => state.children.some((c) => computeWeekStats(state.weeks[k], c.id).totalPossible > 0))
+      .sort()
+      .reverse();
+
+    if (!weekKeys.length) {
+      container.innerHTML = '<p class="hint">Aucune semaine avec des points enregistrés pour l’instant.</p>';
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "tracker history-table";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    const thWeek = document.createElement("th");
+    thWeek.textContent = "Semaine";
+    headRow.appendChild(thWeek);
+    state.children.forEach((child) => {
+      const th = document.createElement("th");
+      th.textContent = child.name;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    weekKeys.forEach((weekKey) => {
+      const week = state.weeks[weekKey];
+      const monday = new Date(`${weekKey}T00:00:00`);
+      const tr = document.createElement("tr");
+
+      const tdWeek = document.createElement("td");
+      tdWeek.className = "habit-name";
+      tdWeek.textContent = formatWeekLabel(monday);
+      tr.appendChild(tdWeek);
+
+      state.children.forEach((child) => {
+        const stats = computeWeekStats(week, child.id);
+        const { icon, label } = tierFor(stats.pct, stats.totalPossible);
+        const td = document.createElement("td");
+        td.title = `${stats.totalEarned} / ${stats.totalPossible} points — ${label}`;
+        td.textContent = stats.totalPossible > 0 ? `${stats.pct}% ${icon}` : "—";
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+
+  document.getElementById("open-history").addEventListener("click", () => {
+    renderHistory();
+    historyDialog.showModal();
   });
 
   // --- Habits dialog ---

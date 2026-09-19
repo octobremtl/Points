@@ -16,6 +16,7 @@
     </nav>
     <div class="actions">
       <button id="edit-habits" class="btn">Habitudes de la semaine</button>
+      <button id="open-history" class="btn btn-ghost">Historique</button>
       <button id="open-settings" class="btn btn-ghost">Paramètres</button>
     </div>
   </header>
@@ -30,6 +31,17 @@
       <button type="button" id="add-habit" class="btn">+ Ajouter une habitude ou un défi</button>
       <div class="dialog-actions">
         <button type="button" id="copy-prev-week" class="btn btn-ghost">Copier la semaine précédente</button>
+        <button type="submit" class="btn btn-primary">Fermer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="history-dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Historique des semaines</h2>
+      <p class="hint">Pourcentage de points obtenus et récompense atteinte, semaine par semaine.</p>
+      <div id="history-content" class="history-content"></div>
+      <div class="dialog-actions">
         <button type="submit" class="btn btn-primary">Fermer</button>
       </div>
     </form>

@@ -193,6 +193,13 @@ table.tracker td.cell.today { outline: 2px solid var(--accent); outline-offset: 
 
 .hint { color: var(--muted); font-size: 0.85rem; }
 
+.history-content { max-height: 60vh; overflow-y: auto; }
+
+table.history-table td, table.history-table th {
+  font-size: 0.85rem;
+}
+table.history-table td.habit-name { white-space: nowrap; }
+
 dialog {
   border: none;
   border-radius: 14px;
