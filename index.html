@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Points des enfants</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Points des enfants</h1>
+    <nav class="week-nav">
+      <button id="prev-week" class="icon-btn" aria-label="Semaine précédente">‹</button>
+      <button id="today-week" class="week-label" title="Revenir à la semaine courante"></button>
+      <button id="next-week" class="icon-btn" aria-label="Semaine suivante">›</button>
+    </nav>
+    <div class="actions">
+      <button id="edit-habits" class="btn">Habitudes de la semaine</button>
+      <button id="open-settings" class="btn btn-ghost">Paramètres</button>
+    </div>
+  </header>
+
+  <main id="boards"></main>
+
+  <dialog id="habits-dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Habitudes de la semaine</h2>
+      <p class="hint">Ces habitudes s'appliquent seulement à la semaine affichée. Une nouvelle semaine reprend automatiquement celles de la semaine précédente.</p>
+      <div id="habits-list" class="habits-list"></div>
+      <button type="button" id="add-habit" class="btn">+ Ajouter une habitude ou un défi</button>
+      <div class="dialog-actions">
+        <button type="button" id="copy-prev-week" class="btn btn-ghost">Copier la semaine précédente</button>
+        <button type="submit" class="btn btn-primary">Fermer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Paramètres</h2>
+
+      <h3>Enfants</h3>
+      <div id="children-list" class="children-list"></div>
+      <button type="button" id="add-child" class="btn">+ Ajouter un enfant</button>
+
+      <h3>Seuils de récompense</h3>
+      <div class="field-row">
+        <label>Petite récompense à partir de
+          <input type="number" id="small-threshold" min="0" max="100" step="1"> %
+        </label>
+        <label>Grosse récompense à partir de
+          <input type="number" id="big-threshold" min="0" max="100" step="1"> %
+        </label>
+      </div>
+
+      <h3>Sauvegarde</h3>
+      <div class="field-row">
+        <button type="button" id="export-data" class="btn btn-ghost">Exporter (JSON)</button>
+        <label class="btn btn-ghost">Importer (JSON)
+          <input type="file" id="import-data" accept="application/json" hidden>
+        </label>
+        <button type="button" id="reset-data" class="btn btn-danger">Tout effacer</button>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="submit" class="btn btn-primary">Fermer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
