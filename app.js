@@ -79,6 +79,8 @@
   }
 
   let currentMonday = getMonday(new Date());
+  let currentView = "day"; // 'day' | 'week'
+  let selectedDayIndex = (new Date().getDay() + 6) % 7; // Mon=0..Sun=6
 
   function currentWeekKey() {
     return weekKeyOf(currentMonday);
@@ -110,17 +112,63 @@
   // --- Rendering ---
   const boardsEl = document.getElementById("boards");
   const weekLabelBtn = document.getElementById("today-week");
+  const dayChipsEl = document.getElementById("day-chips");
+  const viewDayBtn = document.getElementById("view-day");
+  const viewWeekBtn = document.getElementById("view-week");
+
+  function isViewingCurrentWeek() {
+    return weekKeyOf(getMonday(new Date())) === weekKeyOf(currentMonday);
+  }
+
+  function renderDayChips() {
+    dayChipsEl.innerHTML = "";
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const isCurrentWeek = isViewingCurrentWeek();
+    DAYS.forEach((d, i) => {
+      const dayDate = new Date(currentMonday);
+      dayDate.setDate(dayDate.getDate() + i);
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "day-chip";
+      if (i === selectedDayIndex) chip.classList.add("active");
+      if (isCurrentWeek && i === todayIdx) chip.classList.add("is-today");
+      chip.innerHTML = `${d}<span class="chip-date">${dayDate.getDate()}</span>`;
+      chip.addEventListener("click", () => {
+        selectedDayIndex = i;
+        render();
+      });
+      dayChipsEl.appendChild(chip);
+    });
+  }
 
   function render() {
     const weekKey = currentWeekKey();
     const week = ensureWeek(weekKey);
     weekLabelBtn.textContent = formatWeekLabel(currentMonday);
 
+    viewDayBtn.classList.toggle("active", currentView === "day");
+    viewWeekBtn.classList.toggle("active", currentView === "week");
+    viewDayBtn.setAttribute("aria-selected", String(currentView === "day"));
+    viewWeekBtn.setAttribute("aria-selected", String(currentView === "week"));
+    dayChipsEl.hidden = currentView !== "day";
+    if (currentView === "day") renderDayChips();
+
     boardsEl.innerHTML = "";
     state.children.forEach((child) => {
-      boardsEl.appendChild(renderBoard(child, week));
+      boardsEl.appendChild(
+        currentView === "day" ? renderBoardDay(child, week) : renderBoard(child, week)
+      );
     });
   }
+
+  viewDayBtn.addEventListener("click", () => {
+    currentView = "day";
+    render();
+  });
+  viewWeekBtn.addEventListener("click", () => {
+    currentView = "week";
+    render();
+  });
 
   function cellState(week, childId, habitId, dayKey) {
     const marks = ensureChildMarks(week, childId);
@@ -249,6 +297,73 @@
     return board;
   }
 
+  function renderBoardDay(child, week) {
+    const board = document.createElement("section");
+    board.className = "board";
+
+    const title = document.createElement("h2");
+    title.textContent = child.name;
+    board.appendChild(title);
+
+    const stats = computeWeekStats(week, child.id);
+    const summary = document.createElement("p");
+    summary.className = "summary";
+    summary.textContent = `${stats.totalEarned} / ${stats.totalPossible} points cette semaine (${stats.pct}%)`;
+    board.appendChild(summary);
+
+    const { tier, label } = tierFor(stats.pct, stats.totalPossible);
+    const banner = document.createElement("div");
+    banner.className = `reward-banner reward-${tier}`;
+    banner.textContent = tier === "none" ? label : `${label} débloquée !`;
+    board.appendChild(banner);
+
+    const dayKey = DAY_KEYS[selectedDayIndex];
+    const list = document.createElement("ul");
+    list.className = "day-list";
+
+    week.habits.forEach((habit) => {
+      const li = document.createElement("li");
+      const item = document.createElement("button");
+      item.type = "button";
+      const s = cellState(week, child.id, habit.id, dayKey);
+      item.className = "day-habit" + (s === "done" ? " done" : s === "missed" ? " missed" : "");
+
+      const icon = document.createElement("span");
+      icon.className = "state-icon";
+      icon.textContent = symbolFor(s);
+      item.appendChild(icon);
+
+      const text = document.createElement("span");
+      text.className = "habit-text";
+      text.textContent = habit.label;
+      if (habit.points > 1) {
+        const pts = document.createElement("span");
+        pts.className = "habit-points";
+        pts.textContent = `${habit.points} points`;
+        text.appendChild(pts);
+      }
+      if (habit.note) {
+        const note = document.createElement("span");
+        note.className = "habit-points";
+        note.textContent = habit.note;
+        text.appendChild(note);
+      }
+      item.appendChild(text);
+
+      item.addEventListener("click", () => {
+        const cur = cellState(week, child.id, habit.id, dayKey);
+        setCellState(week, child.id, habit.id, dayKey, nextState(cur));
+        render();
+      });
+
+      li.appendChild(item);
+      list.appendChild(li);
+    });
+
+    board.appendChild(list);
+    return board;
+  }
+
   // --- Stats shared between the board view and the history view ---
   function computeWeekStats(week, childId) {
     let totalEarned = 0;
@@ -276,6 +391,28 @@
     if (totalPossible > 0 && pct >= smallThreshold) return { tier: "small", label: "🎁 Petite récompense", icon: "🎁" };
     return { tier: "none", label: "Pas encore de récompense", icon: "" };
   }
+
+  // --- Menu dropdown ---
+  const menuToggle = document.getElementById("menu-toggle");
+  const menuDropdown = document.getElementById("menu-dropdown");
+
+  function closeMenu() {
+    menuDropdown.hidden = true;
+    menuToggle.setAttribute("aria-expanded", "false");
+  }
+
+  menuToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = menuDropdown.hidden;
+    menuDropdown.hidden = !willOpen;
+    menuToggle.setAttribute("aria-expanded", String(willOpen));
+  });
+  document.addEventListener("click", (e) => {
+    if (!menuDropdown.hidden && !menuDropdown.contains(e.target) && e.target !== menuToggle) closeMenu();
+  });
+  menuDropdown.querySelectorAll(".menu-item").forEach((item) => {
+    item.addEventListener("click", closeMenu);
+  });
 
   // --- Week navigation ---
   document.getElementById("prev-week").addEventListener("click", () => {
@@ -545,4 +682,11 @@
   settingsDialog.addEventListener("close", render);
 
   render();
+
+  // --- PWA: offline support + installable on Android ---
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch((err) => console.warn("Service worker non enregistré", err));
+    });
+  }
 })();

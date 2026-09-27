@@ -63,19 +63,53 @@ h1 { font-size: 1.3rem; margin: 0; }
 
 .topbar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 20px;
   max-width: 1000px;
   margin-inline: auto;
 }
 
+.topbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-wrap { position: relative; }
+
+.menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  overflow: hidden;
+}
+
+.menu-item {
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+.menu-item:hover { background: var(--bg); }
+
 .week-nav {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin-inline-start: auto;
 }
 
 .week-label {
@@ -83,21 +117,73 @@ h1 { font-size: 1.3rem; margin: 0; }
   background: none;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 10px 14px;
+  min-height: 44px;
   color: var(--text);
   cursor: pointer;
 }
 
 .icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--card-bg);
   color: var(--text);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  align-self: center;
+}
+
+.toggle-btn {
+  flex: 1;
+  border: none;
+  background: var(--card-bg);
+  color: var(--text);
+  padding: 10px 20px;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
 }
+.toggle-btn.active { background: var(--accent); color: var(--accent-contrast); }
+
+.day-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.day-chip {
+  flex: 1;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+.day-chip .chip-date { font-weight: 400; font-size: 0.7rem; color: var(--muted); }
+.day-chip.active { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+.day-chip.active .chip-date { color: var(--accent-contrast); opacity: 0.85; }
+.day-chip.is-today { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -106,7 +192,8 @@ h1 { font-size: 1.3rem; margin: 0; }
   background: var(--card-bg);
   color: var(--text);
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 10px 16px;
+  min-height: 44px;
   font-size: 0.9rem;
   cursor: pointer;
   display: inline-flex;
@@ -157,6 +244,53 @@ h1 { font-size: 1.3rem; margin: 0; }
 .reward-small { background: var(--silver); color: #333; }
 .reward-big { background: var(--gold); color: #3a2c00; }
 
+.day-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-habit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 10px 14px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.day-habit .state-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: var(--card-bg);
+}
+
+.day-habit .habit-text { flex: 1; }
+.day-habit .habit-points { color: var(--muted); font-size: 0.8rem; display: block; }
+
+.day-habit.done { background: var(--pink); border-color: var(--pink); }
+.day-habit.done .state-icon { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+
+.day-habit.missed { border-color: var(--danger); }
+.day-habit.missed .state-icon { border-color: var(--danger); color: var(--danger); }
+
 table.tracker {
   border-collapse: collapse;
   width: 100%;
@@ -182,8 +316,9 @@ table.tracker td.habit-name .habit-note { display: block; color: var(--muted); f
 table.tracker td.cell {
   cursor: pointer;
   user-select: none;
-  font-size: 1rem;
-  width: 34px;
+  font-size: 1.1rem;
+  width: 44px;
+  min-height: 44px;
 }
 table.tracker td.cell:hover { background: rgba(0,0,0,0.04); }
 table.tracker td.cell.done { background: var(--pink); }

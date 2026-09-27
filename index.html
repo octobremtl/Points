@@ -3,22 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f8a72">
   <title>Points des enfants</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
-    <h1>Points des enfants</h1>
+    <div class="topbar-row">
+      <h1>Points</h1>
+      <div class="menu-wrap">
+        <button id="menu-toggle" class="icon-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false">⋮</button>
+        <div id="menu-dropdown" class="menu-dropdown" hidden>
+          <button id="edit-habits" class="menu-item">Habitudes de la semaine</button>
+          <button id="open-history" class="menu-item">Historique</button>
+          <button id="open-settings" class="menu-item">Paramètres</button>
+        </div>
+      </div>
+    </div>
+
     <nav class="week-nav">
       <button id="prev-week" class="icon-btn" aria-label="Semaine précédente">‹</button>
       <button id="today-week" class="week-label" title="Revenir à la semaine courante"></button>
       <button id="next-week" class="icon-btn" aria-label="Semaine suivante">›</button>
     </nav>
-    <div class="actions">
-      <button id="edit-habits" class="btn">Habitudes de la semaine</button>
-      <button id="open-history" class="btn btn-ghost">Historique</button>
-      <button id="open-settings" class="btn btn-ghost">Paramètres</button>
+
+    <div class="view-toggle" role="tablist" aria-label="Mode d'affichage">
+      <button id="view-day" class="toggle-btn" data-view="day" role="tab">Jour</button>
+      <button id="view-week" class="toggle-btn" data-view="week" role="tab">Semaine</button>
     </div>
+
+    <div id="day-chips" class="day-chips" role="tablist" aria-label="Jour de la semaine"></div>
   </header>
 
   <main id="boards"></main>
