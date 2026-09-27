@@ -216,6 +216,7 @@ h1 { font-size: 1.3rem; margin: 0; }
 .board {
   background: var(--card-bg);
   border: 1px solid var(--border);
+  border-top: 5px solid var(--child-color, var(--border));
   border-radius: 14px;
   padding: 16px;
   overflow-x: auto;
@@ -224,6 +225,7 @@ h1 { font-size: 1.3rem; margin: 0; }
 .board h2 {
   margin: 0 0 4px;
   font-size: 1.1rem;
+  color: var(--child-color, var(--text));
 }
 
 .board .summary {
@@ -285,8 +287,8 @@ h1 { font-size: 1.3rem; margin: 0; }
 .day-habit .habit-text { flex: 1; }
 .day-habit .habit-points { color: var(--muted); font-size: 0.8rem; display: block; }
 
-.day-habit.done { background: var(--pink); border-color: var(--pink); }
-.day-habit.done .state-icon { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+.day-habit.done { background: var(--child-color-soft, var(--pink)); border-color: var(--child-color-soft, var(--pink)); }
+.day-habit.done .state-icon { background: var(--child-color, var(--accent)); border-color: var(--child-color, var(--accent)); color: #fff; }
 
 .day-habit.missed { border-color: var(--danger); }
 .day-habit.missed .state-icon { border-color: var(--danger); color: var(--danger); }
@@ -321,7 +323,7 @@ table.tracker td.cell {
   min-height: 44px;
 }
 table.tracker td.cell:hover { background: rgba(0,0,0,0.04); }
-table.tracker td.cell.done { background: var(--pink); }
+table.tracker td.cell.done { background: var(--child-color-soft, var(--pink)); }
 table.tracker td.cell.today { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .tfoot-row td { font-weight: 700; background: var(--blue); }
@@ -361,6 +363,20 @@ dialog::backdrop { background: rgba(0,0,0,0.4); }
   grid-template-columns: 1fr 70px auto;
   gap: 8px;
   align-items: center;
+}
+
+.child-row {
+  grid-template-columns: 44px 1fr auto;
+}
+
+.child-row input[type="color"] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  cursor: pointer;
 }
 
 .habit-row input[type="text"], .child-row input[type="text"] {

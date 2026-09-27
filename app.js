@@ -22,11 +22,30 @@
     ];
   }
 
+  const PALETTE = ["#f3c94f", "#5b8fc7", "#e2836f", "#7cbf8e", "#b98fd1", "#e0a2c2"];
+
+  function colorForChild(child, index) {
+    return child.color || PALETTE[index % PALETTE.length];
+  }
+
+  function hexToRgba(hex, alpha) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return `rgba(0,0,0,${alpha})`;
+    const [r, g, b] = m.slice(1).map((h) => parseInt(h, 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function applyChildColor(board, child, index) {
+    const color = colorForChild(child, index);
+    board.style.setProperty("--child-color", color);
+    board.style.setProperty("--child-color-soft", hexToRgba(color, 0.28));
+  }
+
   function defaultData() {
     return {
       children: [
-        { id: uid(), name: "Enfant 1" },
-        { id: uid(), name: "Enfant 2" },
+        { id: uid(), name: "Éloïse", color: "#f3c94f" },
+        { id: uid(), name: "Zack", color: "#5b8fc7" },
       ],
       weeks: {},
       settings: { smallThreshold: 50, bigThreshold: 80 },
@@ -154,10 +173,10 @@
     if (currentView === "day") renderDayChips();
 
     boardsEl.innerHTML = "";
-    state.children.forEach((child) => {
-      boardsEl.appendChild(
-        currentView === "day" ? renderBoardDay(child, week) : renderBoard(child, week)
-      );
+    state.children.forEach((child, index) => {
+      const board = currentView === "day" ? renderBoardDay(child, week) : renderBoard(child, week);
+      applyChildColor(board, child, index);
+      boardsEl.appendChild(board);
     });
   }
 
@@ -580,9 +599,19 @@
 
   function renderChildrenList() {
     childrenList.innerHTML = "";
-    state.children.forEach((child) => {
+    state.children.forEach((child, index) => {
       const row = document.createElement("div");
       row.className = "child-row";
+
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.title = "Couleur du tableau";
+      colorInput.value = colorForChild(child, index);
+      colorInput.addEventListener("input", () => {
+        child.color = colorInput.value;
+        saveData();
+        render();
+      });
 
       const nameInput = document.createElement("input");
       nameInput.type = "text";
@@ -591,8 +620,6 @@
         child.name = nameInput.value;
         saveData();
       });
-
-      const spacer = document.createElement("span");
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
@@ -609,8 +636,8 @@
         renderChildrenList();
       });
 
+      row.appendChild(colorInput);
       row.appendChild(nameInput);
-      row.appendChild(spacer);
       row.appendChild(removeBtn);
       childrenList.appendChild(row);
     });
@@ -624,7 +651,7 @@
   });
 
   document.getElementById("add-child").addEventListener("click", () => {
-    state.children.push({ id: uid(), name: "Nouvel enfant" });
+    state.children.push({ id: uid(), name: "Nouvel enfant", color: PALETTE[state.children.length % PALETTE.length] });
     saveData();
     renderChildrenList();
   });
