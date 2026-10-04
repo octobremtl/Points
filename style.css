@@ -440,7 +440,17 @@ dialog::backdrop { background: rgba(0,0,0,0.4); }
 }
 
 .child-row {
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 44px 1fr 64px auto;
+}
+
+.child-row input[type="number"] {
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  text-align: center;
 }
 
 .child-row input[type="color"] {

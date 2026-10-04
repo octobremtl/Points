@@ -800,6 +800,18 @@
         saveData();
       });
 
+      const pointsInput = document.createElement("input");
+      pointsInput.type = "number";
+      pointsInput.min = "0";
+      pointsInput.step = "1";
+      pointsInput.title = "Solde de points (ajustable manuellement)";
+      pointsInput.value = child.points;
+      pointsInput.addEventListener("change", () => {
+        child.points = Math.max(0, parseInt(pointsInput.value, 10) || 0);
+        saveData();
+        render();
+      });
+
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "remove-btn";
@@ -817,6 +829,7 @@
 
       row.appendChild(colorInput);
       row.appendChild(nameInput);
+      row.appendChild(pointsInput);
       row.appendChild(removeBtn);
       childrenList.appendChild(row);
     });
