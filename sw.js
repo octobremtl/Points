@@ -1,4 +1,4 @@
-const CACHE_NAME = "points-enfants-v3";
+const CACHE_NAME = "points-enfants-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -23,20 +23,20 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Network-first: always try to fetch the latest version first (so a new
+// deploy shows up right away), falling back to the cached copy only when
+// offline or the network fails.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
