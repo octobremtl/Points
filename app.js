@@ -896,9 +896,24 @@
   render();
 
   // --- PWA: offline support + installable on Android ---
+  // Auto-reload once a newly installed service worker takes control, so a
+  // fresh deploy shows up immediately instead of needing a manual app
+  // restart (PWAs can otherwise keep running a stale cached version).
   if ("serviceWorker" in navigator) {
+    let reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloadedForUpdate) return;
+      reloadedForUpdate = true;
+      window.location.reload();
+    });
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch((err) => console.warn("Service worker non enregistré", err));
+      navigator.serviceWorker
+        .register("sw.js")
+        .then((reg) => {
+          reg.update().catch(() => {});
+          setInterval(() => reg.update().catch(() => {}), 60 * 1000);
+        })
+        .catch((err) => console.warn("Service worker non enregistré", err));
     });
   }
 })();
