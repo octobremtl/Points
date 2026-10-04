@@ -17,7 +17,7 @@
       <div class="menu-wrap">
         <button id="menu-toggle" class="icon-btn" aria-label="Menu" aria-haspopup="true" aria-expanded="false">⋮</button>
         <div id="menu-dropdown" class="menu-dropdown" hidden>
-          <button id="edit-habits" class="menu-item">Habitudes de la semaine</button>
+          <button id="edit-habits" class="menu-item">Habitudes</button>
           <button id="open-history" class="menu-item">Historique</button>
           <button id="open-settings" class="menu-item">Paramètres</button>
         </div>
@@ -42,13 +42,22 @@
 
   <dialog id="habits-dialog">
     <form method="dialog" class="dialog-body">
-      <h2>Habitudes de la semaine</h2>
-      <p class="hint">Ces habitudes s'appliquent seulement à la semaine affichée. Une nouvelle semaine reprend automatiquement celles de la semaine précédente.</p>
-      <p class="hint">🎁 Bonus : donne un point si coché, mais n'a aucun impact sur le pourcentage s'il ne l'est pas.</p>
-      <div id="habits-list" class="habits-list"></div>
-      <button type="button" id="add-habit" class="btn">+ Ajouter une habitude ou un défi</button>
+      <h2>Habitudes</h2>
+      <p class="hint">Cocher une habitude ajoute des points ; ne pas la cocher n'enlève jamais rien. Garde peu d'habitudes « Actives » à la fois — les autres attendent dans la liste « En attente ».</p>
+
+      <h3>Actives</h3>
+      <div id="habits-active" class="habits-list"></div>
+
+      <h3>En attente</h3>
+      <p class="hint">Prêtes à activer quand vous en discutez avec les enfants.</p>
+      <div id="habits-waiting" class="habits-list"></div>
+
+      <h3>Maîtrisées</h3>
+      <p class="hint">Retirées du suivi actif une fois l'habitude bien ancrée.</p>
+      <div id="habits-mastered" class="habits-list"></div>
+
+      <button type="button" id="add-habit" class="btn">+ Ajouter une habitude</button>
       <div class="dialog-actions">
-        <button type="button" id="copy-prev-week" class="btn btn-ghost">Copier la semaine précédente</button>
         <button type="submit" class="btn btn-primary">Fermer</button>
       </div>
     </form>
@@ -56,8 +65,8 @@
 
   <dialog id="history-dialog">
     <form method="dialog" class="dialog-body">
-      <h2>Historique des semaines</h2>
-      <p class="hint">Pourcentage de points obtenus et récompense atteinte, semaine par semaine.</p>
+      <h2>Historique</h2>
+      <p class="hint">Points cumulés depuis le début et récompenses échangées.</p>
       <div id="history-content" class="history-content"></div>
       <div class="dialog-actions">
         <button type="submit" class="btn btn-primary">Fermer</button>
@@ -73,13 +82,26 @@
       <div id="children-list" class="children-list"></div>
       <button type="button" id="add-child" class="btn">+ Ajouter un enfant</button>
 
-      <h3>Seuils de récompense</h3>
+      <h3>Coût des récompenses</h3>
       <div class="field-row">
-        <label>Petite récompense à partir de
-          <input type="number" id="small-threshold" min="0" max="100" step="1"> %
+        <label>Petite récompense
+          <input type="number" id="small-threshold" min="1" step="1"> points
         </label>
-        <label>Grosse récompense à partir de
-          <input type="number" id="big-threshold" min="0" max="100" step="1"> %
+        <label>Grosse récompense
+          <input type="number" id="big-threshold" min="1" step="1"> points
+        </label>
+      </div>
+
+      <h3>Bonus surprise</h3>
+      <p class="hint">Chance qu'un point bonus imprévu soit accordé quand une habitude est cochée.</p>
+      <div class="field-row">
+        <label>Fréquence
+          <select id="surprise-chance">
+            <option value="0">Désactivé</option>
+            <option value="0.1">Rare (10%)</option>
+            <option value="0.2">Occasionnel (20%)</option>
+            <option value="0.35">Fréquent (35%)</option>
+          </select>
         </label>
       </div>
 
@@ -97,6 +119,8 @@
       </div>
     </form>
   </dialog>
+
+  <div id="toast" class="toast" hidden></div>
 
   <script src="app.js"></script>
 </body>
