@@ -248,6 +248,17 @@
     showToast(`${tier === "big" ? "🏆" : "🎁"} Récompense échangée pour ${child.name} !`);
   }
 
+  function undoRedeem(child, redeemedIndex) {
+    const entry = child.redeemed[redeemedIndex];
+    if (!entry) return;
+    child.redeemed.splice(redeemedIndex, 1);
+    child.points += entry.cost;
+    saveData();
+    render();
+    renderHistory();
+    showToast(`↩️ Échange annulé pour ${child.name} : +${entry.cost} points remis.`);
+  }
+
   // --- Rendering ---
   const boardsEl = document.getElementById("boards");
   const weekLabelBtn = document.getElementById("today-week");
@@ -556,11 +567,20 @@
       if (child.redeemed.length) {
         const table = document.createElement("table");
         table.className = "redeemed-table";
-        table.innerHTML = "<thead><tr><th>Date</th><th>Récompense</th><th>Coût</th></tr></thead>";
+        table.innerHTML = "<thead><tr><th>Date</th><th>Récompense</th><th>Coût</th><th></th></tr></thead>";
         const tbody = document.createElement("tbody");
-        [...child.redeemed].reverse().forEach((r) => {
+        child.redeemed.map((r, i) => ({ r, i })).reverse().forEach(({ r, i }) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `<td>${r.date}</td><td>${r.tier === "big" ? "🏆 Grosse" : "🎁 Petite"}</td><td>${r.cost} pts</td>`;
+          const actionTd = document.createElement("td");
+          const undoBtn = document.createElement("button");
+          undoBtn.type = "button";
+          undoBtn.className = "btn btn-small btn-ghost";
+          undoBtn.textContent = "↩️ Annuler";
+          undoBtn.title = "Annuler cet échange et remettre les points";
+          undoBtn.addEventListener("click", () => undoRedeem(child, i));
+          actionTd.appendChild(undoBtn);
+          tr.appendChild(actionTd);
           tbody.appendChild(tr);
         });
         table.appendChild(tbody);
