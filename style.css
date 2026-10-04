@@ -365,6 +365,26 @@ dialog::backdrop { background: rgba(0,0,0,0.4); }
   align-items: center;
 }
 
+.habit-row {
+  grid-template-columns: 1fr 56px 64px auto;
+}
+
+.habit-row > * { min-width: 0; }
+
+.bonus-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bonus-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
 .child-row {
   grid-template-columns: 44px 1fr auto;
 }

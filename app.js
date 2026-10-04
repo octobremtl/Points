@@ -17,9 +17,30 @@
       { id: uid(), label: "Routine du matin à l'heure", points: 1 },
       { id: uid(), label: "Devoirs sans chialer ni niaiser", points: 1 },
       { id: uid(), label: "Garder ma bonne humeur", points: 1 },
-      { id: uid(), label: "Bonne action de la semaine", points: 1 },
-      { id: uid(), label: "Défi de la semaine", points: 2, note: "À définir chaque semaine" },
+      { id: uid(), label: "Bonne action de la semaine", points: 1, bonus: true },
+      { id: uid(), label: "Défi de la semaine", points: 2, note: "À définir chaque semaine", bonus: true },
     ];
+  }
+
+  // Habits whose label matches these keywords (accent/case-insensitive) are
+  // auto-flagged as bonus the first time they're seen, so habits already
+  // created in a user's browser before this feature existed pick it up too.
+  const BONUS_KEYWORDS = ["bonne action", "extra", "defi"];
+
+  function normalizeLabel(s) {
+    return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  }
+
+  function migrateBonusFlags(data) {
+    Object.values(data.weeks || {}).forEach((week) => {
+      (week.habits || []).forEach((habit) => {
+        if (habit.bonus === undefined) {
+          const n = normalizeLabel(habit.label);
+          habit.bonus = BONUS_KEYWORDS.some((kw) => n.includes(kw));
+        }
+      });
+    });
+    return data;
   }
 
   const PALETTE = ["#f3c94f", "#5b8fc7", "#e2836f", "#7cbf8e", "#b98fd1", "#e0a2c2"];
@@ -58,7 +79,7 @@
       if (!raw) return defaultData();
       const parsed = JSON.parse(raw);
       if (!parsed.children || !parsed.weeks || !parsed.settings) return defaultData();
-      return parsed;
+      return migrateBonusFlags(parsed);
     } catch (e) {
       console.warn("Données corrompues, réinitialisation.", e);
       return defaultData();
@@ -202,7 +223,8 @@
     saveData();
   }
 
-  function nextState(s) {
+  function nextState(s, isBonus) {
+    if (isBonus) return s === "done" ? null : "done";
     if (s === null) return "done";
     if (s === "done") return "missed";
     return null;
@@ -251,6 +273,7 @@
       const labelSpan = document.createElement("span");
       labelSpan.className = "habit-label";
       labelSpan.textContent = habit.points > 1 ? `${habit.label} (${habit.points} pts)` : habit.label;
+      if (habit.bonus) labelSpan.textContent += " 🎁";
       nameTd.appendChild(labelSpan);
       if (habit.note) {
         const noteSpan = document.createElement("span");
@@ -268,15 +291,15 @@
         if (s === "done") {
           td.classList.add("done");
           totalEarned += habit.points;
-          totalPossible += habit.points;
+          if (!habit.bonus) totalPossible += habit.points;
           dailyEarned[i] += habit.points;
-        } else if (s === "missed") {
+        } else if (s === "missed" && !habit.bonus) {
           totalPossible += habit.points;
         }
         td.textContent = symbolFor(s);
         td.addEventListener("click", () => {
           const cur = cellState(week, child.id, habit.id, dayKey);
-          setCellState(week, child.id, habit.id, dayKey, nextState(cur));
+          setCellState(week, child.id, habit.id, dayKey, nextState(cur, habit.bonus));
           render();
         });
         tr.appendChild(td);
@@ -354,11 +377,13 @@
 
       const text = document.createElement("span");
       text.className = "habit-text";
-      text.textContent = habit.label;
-      if (habit.points > 1) {
+      text.textContent = habit.bonus ? `${habit.label} 🎁` : habit.label;
+      if (habit.points > 1 || habit.bonus) {
         const pts = document.createElement("span");
         pts.className = "habit-points";
-        pts.textContent = `${habit.points} points`;
+        pts.textContent = habit.bonus
+          ? `Bonus — ${habit.points} point${habit.points > 1 ? "s" : ""} si fait, aucun impact sinon`
+          : `${habit.points} points`;
         text.appendChild(pts);
       }
       if (habit.note) {
@@ -371,7 +396,7 @@
 
       item.addEventListener("click", () => {
         const cur = cellState(week, child.id, habit.id, dayKey);
-        setCellState(week, child.id, habit.id, dayKey, nextState(cur));
+        setCellState(week, child.id, habit.id, dayKey, nextState(cur, habit.bonus));
         render();
       });
 
@@ -394,8 +419,8 @@
         const s = marks[dayKey];
         if (s === "done") {
           totalEarned += habit.points;
-          totalPossible += habit.points;
-        } else if (s === "missed") {
+          if (!habit.bonus) totalPossible += habit.points;
+        } else if (s === "missed" && !habit.bonus) {
           totalPossible += habit.points;
         }
       });
@@ -544,6 +569,19 @@
         saveData();
       });
 
+      const bonusLabel = document.createElement("label");
+      bonusLabel.className = "bonus-toggle";
+      const bonusCheckbox = document.createElement("input");
+      bonusCheckbox.type = "checkbox";
+      bonusCheckbox.checked = !!habit.bonus;
+      bonusCheckbox.addEventListener("change", () => {
+        habit.bonus = bonusCheckbox.checked;
+        saveData();
+      });
+      bonusLabel.appendChild(bonusCheckbox);
+      bonusLabel.appendChild(document.createTextNode("Bonus"));
+      bonusLabel.title = "Un bonus donne un point s'il est coché, sans jamais pénaliser s'il ne l'est pas.";
+
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "remove-btn";
@@ -557,6 +595,7 @@
 
       row.appendChild(labelInput);
       row.appendChild(pointsInput);
+      row.appendChild(bonusLabel);
       row.appendChild(removeBtn);
       habitsList.appendChild(row);
     });
