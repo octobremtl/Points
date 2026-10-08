@@ -8,7 +8,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css">
+  <!-- Cache-busting: bump this version on every deploy that changes style.css/app.js,
+       so GitHub Pages' CDN and browser caches always fetch a brand-new URL instead
+       of serving a stale cached copy. -->
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header class="topbar">
@@ -122,6 +125,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
