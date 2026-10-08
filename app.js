@@ -42,8 +42,55 @@
     board.style.setProperty("--child-color-soft", hexToRgba(color, 0.28));
   }
 
+  // Reward ideas discussed with each child — auto-seeded once for a child
+  // whose name matches, including on data that already existed before this
+  // feature shipped (see ensureRewardIdeas).
+  const CURATED_REWARD_IDEAS = {
+    "éloïse": [
+      "Choisir l'histoire du soir (ou en avoir deux au lieu d'une)",
+      "Choisir l'émission ou le film en famille",
+      "20 minutes d'écrans supplémentaires",
+      "Préparer une collation spéciale ensemble",
+      "Une chasse au trésor miniature dans la maison",
+      "Camping dans le salon (tente, lampe de poche, histoires)",
+      "Patin, vélo ou glissade selon la saison",
+      "Une soirée spéciale où elle choisit tout le programme",
+      "Une journée où elle mène (choisit les activités de la journée)",
+    ],
+    "zack": [
+      "Rester 15 minutes de plus avant le dodo",
+      "Sauter une tâche ménagère habituelle",
+      "Choisir le repas du soir",
+      "20 minutes d'écrans supplémentaires",
+      "Camping dans le salon (tente, lampe de poche, histoires)",
+      "Patin, vélo ou glissade selon la saison",
+      "Une soirée spéciale où il choisit tout le programme",
+      "Une journée où il mène (choisit les activités de la journée)",
+      "Une heure de coucher repoussée pour une soirée spéciale",
+    ],
+  };
+
+  function curatedIdeasFor(name) {
+    const key = (name || "").trim().toLowerCase();
+    return CURATED_REWARD_IDEAS[key] ? [...CURATED_REWARD_IDEAS[key]] : [];
+  }
+
+  // Backfills rewardIdeas on children that predate this feature (loaded from
+  // localStorage or migrated from the old weekly model), seeding curated
+  // ideas by name match instead of leaving the list empty.
+  function ensureRewardIdeas(children) {
+    let changed = false;
+    children.forEach((child) => {
+      if (child.rewardIdeas === undefined) {
+        child.rewardIdeas = curatedIdeasFor(child.name);
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
   function defaultChild(name, color) {
-    return { id: uid(), name, color, points: 0, redeemed: [] };
+    return { id: uid(), name, color, points: 0, redeemed: [], rewardIdeas: curatedIdeasFor(name) };
   }
 
   function defaultData() {
@@ -69,6 +116,7 @@
         color: c.color || PALETTE[i % PALETTE.length],
         points: 0,
         redeemed: [],
+        rewardIdeas: curatedIdeasFor(c.name),
       }));
     }
     const earnedByChild = {};
@@ -95,7 +143,12 @@
       if (!raw) return defaultData();
       const parsed = JSON.parse(raw);
       if (!parsed.children) return defaultData();
-      if (parsed.version === 2) return parsed;
+      if (parsed.version === 2) {
+        if (ensureRewardIdeas(parsed.children)) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+        return parsed;
+      }
       return migrateToV2(parsed);
     } catch (e) {
       console.warn("Données corrompues, réinitialisation.", e);
@@ -354,6 +407,22 @@
     redeemRow.appendChild(bigBtn);
 
     board.appendChild(redeemRow);
+
+    if (child.rewardIdeas && child.rewardIdeas.length) {
+      const details = document.createElement("details");
+      details.className = "reward-ideas";
+      const summary = document.createElement("summary");
+      summary.textContent = "💡 Idées de récompenses";
+      details.appendChild(summary);
+      const ul = document.createElement("ul");
+      child.rewardIdeas.forEach((idea) => {
+        const li = document.createElement("li");
+        li.textContent = idea;
+        ul.appendChild(li);
+      });
+      details.appendChild(ul);
+      board.appendChild(details);
+    }
   }
 
   function renderBoardDay(child) {
@@ -831,7 +900,22 @@
       row.appendChild(nameInput);
       row.appendChild(pointsInput);
       row.appendChild(removeBtn);
-      childrenList.appendChild(row);
+
+      const ideasInput = document.createElement("textarea");
+      ideasInput.className = "reward-ideas-input";
+      ideasInput.rows = 3;
+      ideasInput.placeholder = "Idées de récompenses pour " + (child.name || "cet enfant") + " (une par ligne)";
+      ideasInput.value = (child.rewardIdeas || []).join("\n");
+      ideasInput.addEventListener("change", () => {
+        child.rewardIdeas = ideasInput.value.split("\n").map((s) => s.trim()).filter(Boolean);
+        saveData();
+      });
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "child-entry";
+      wrapper.appendChild(row);
+      wrapper.appendChild(ideasInput);
+      childrenList.appendChild(wrapper);
     });
   }
 
@@ -884,6 +968,7 @@
         const parsed = JSON.parse(reader.result);
         if (!parsed.children || !parsed.habits) throw new Error("format invalide");
         state = parsed.version === 2 ? parsed : migrateToV2(parsed);
+        ensureRewardIdeas(state.children);
         saveData();
         renderChildrenList();
         render();
